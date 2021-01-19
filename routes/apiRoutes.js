@@ -9,7 +9,7 @@ module.exports = function(app) {
     app.get("/api/notes", function (req, res) {
         fs.readFile("db/db.json", function(err, data) {
            if (err) throw err;
-           console.log(JSON.parse(data));
+        //    console.log(JSON.parse(data));
            res.json(JSON.parse(data));
         });
         
@@ -18,16 +18,45 @@ module.exports = function(app) {
     //=========receive new note to save on request body, add it to db.json, return new note to client=======
     app.post("/api/notes", function(req, res) {
         console.log(req.body);
-        fs.readFile("db/db.json", function(err, data) {
+        var notes = JSON.parse(fs.readFileSync("db/db.json"));
+       
+        var newNote = req.body;
+        newNote.id = notes.length;
+        console.log(notes)
+        notes.push(newNote);
+        console.log(notes);
+
+        fs.writeFile("db/db.json",JSON.stringify(notes), function(err) {
             if (err) throw err;
-            let notes = JSON.parse(data);
-            console.log(notes);
-            notes.push(req.body);
-            console.log(notes);
-            res.json(req.body);
-         });
+            console.log("Saved");
+        })
+
+        res.json(req.body);
     });
 
     //======= delete note given ID ======================
 
+    app.delete("/api/notes/:id", function(req, res) {
+        var notes = JSON.parse(fs.readFileSync("db/db.json"));
+       
+        
+        console.log(notes[req.params.id]);
+        console.log(req.params.id);
+
+        notes.splice(req.params.id, 1);
+     
+        // fix id
+        for (i=0; i < notes.length; i++){
+         if(!notes[i].id == i){
+             notes[i].id = i;
+         };
+
+        };
+        //rewrite db
+         fs.writeFile("db/db.json",JSON.stringify(notes), function(err) {
+            if (err) throw err;
+            console.log("Saved");
+        })
+        
+    });
 }
